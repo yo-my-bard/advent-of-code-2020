@@ -1,9 +1,5 @@
-use std::fs;
-use std::fmt::Error;
-use std::fs::File;
-use std::io::{BufReader, BufRead};
 /*
-Follow up:
+TODO:
 - Learn more about `as` for conversion/casting between usize to i32, for example.
 - Read about Rust vectors (Vec)
 - Read about the ? operator
@@ -12,8 +8,8 @@ Follow up:
 
 
 
-fn fetch_the_list() -> &'static str {
-    let TEST = "1227
+pub fn fetch_the_input() -> &'static str {
+    "1227
 1065
 329
 1063
@@ -212,24 +208,18 @@ fn fetch_the_list() -> &'static str {
 1055
 1757
 1116
-1090";
-    return TEST;
-    // return fs::read_to_string("../src/day01.txt").expect("File not found??");
+1090"
+    // return fs::read_to_string("../src/day01pt1.txt").expect("File not found??");
 }
 
-fn some_function(input: &str) -> i32 {
+pub fn day1_1_function(input: &str) -> i32 {
     let mut done: bool = false;
     let mut multiple_1: i32 = 0;
     let mut multiple_2: i32 = 0;
     let v: Vec<&str> = input.split("\n").collect();
     for num in v.clone()  {
-        println!("num {}", num);
         multiple_1 = str::parse(num).unwrap();
         for other_num in v.clone() {
-            // if num == other_num {
-            //     continue
-            // }
-            println!("other {}", other_num);
             multiple_2 = str::parse(other_num).unwrap();
             if multiple_1 + multiple_2 == 2020 {
                 done = true;
@@ -240,23 +230,18 @@ fn some_function(input: &str) -> i32 {
             break;
         }
     }
-    let solution = multiple_1 * multiple_2;
-    println!("The values are: {}, {}", multiple_1, multiple_2);
-    return solution
+    multiple_1 * multiple_2
 }
 
 #[cfg(test)]
 mod tests {
-    use super::some_function;
-    use super::fetch_the_list;
+    use super::day1_1_function;
 
     #[test]
     fn it_should_find_two_entries_that_add_to_2020() {
         let snippet = "1721\n979\n366\n299\n675\n1456";
-        let real_snippet = fetch_the_list();
-        assert_eq!(some_function(real_snippet), 514579);
-        println!("{}", snippet);
-        println!("{}", real_snippet);
-
+        assert_eq!(day1_1_function(snippet), 514579);
     }
+
+
 }
