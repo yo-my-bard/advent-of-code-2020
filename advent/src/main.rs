@@ -2,6 +2,7 @@ mod day01_1;
 mod day01_2;
 mod day02_1;
 mod inputs;
+mod parsers;
 use inputs::fetch_input_file;
 
 fn main() {
