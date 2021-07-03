@@ -25,8 +25,8 @@ pub fn parse_input_string(input: &[u8]) -> IResult<&[u8], PasswordValidator> {
     let (input, (min_o, _, max_o, _, pattern, _, _, password)) = parser(input)?;
     Ok((input,
         PasswordValidator {
-            min_occurrence: String::from_utf8(min_o.to_vec()).unwrap().parse::<u8>().unwrap(),
-            max_occurrence: String::from_utf8(max_o.to_vec()).unwrap().parse::<u8>().unwrap(),
+            min_occurrence: String::from_utf8(min_o.to_vec()).unwrap().parse::<usize>().unwrap(),
+            max_occurrence: String::from_utf8(max_o.to_vec()).unwrap().parse::<usize>().unwrap(),
             pattern: String::from_utf8(pattern.to_vec()).unwrap(),
             password: String::from_utf8(password.to_vec()).unwrap()
         }))
@@ -34,8 +34,8 @@ pub fn parse_input_string(input: &[u8]) -> IResult<&[u8], PasswordValidator> {
 
 #[derive(Debug,PartialEq)]
 pub struct PasswordValidator {
-    min_occurrence: u8,
-    max_occurrence: u8,
+    min_occurrence: usize,
+    max_occurrence: usize,
     pattern: String,
     password: String
 }
@@ -45,6 +45,12 @@ impl PasswordValidator {
         let occurrences = self.password.matches(&self.pattern).count();
         occurrences.ge(&usize::from(self.min_occurrence)) &&
             occurrences.le(&usize::from(self.max_occurrence))
+    }
+
+    pub fn is_positionally_valid(&self) -> bool {
+        (self.password.chars().nth(self.min_occurrence - 1).unwrap() == self.pattern.parse().unwrap() ||
+            self.password.chars().nth(self.max_occurrence - 1).unwrap() == self.pattern.parse().unwrap()) &&
+            !(self.password.chars().nth(self.min_occurrence - 1).unwrap() == self.password.chars().nth(self.max_occurrence - 1).unwrap())
     }
 }
 
@@ -71,6 +77,39 @@ mod tests {
             password: String::from("abcde")
         };
         assert_eq!(pv.is_valid(), true);
+    }
+
+    #[test]
+    fn it_should_be_valid_when_only_one_position_matches_the_pattern() {
+        let pv = PasswordValidator {
+            min_occurrence: 1,
+            max_occurrence: 3,
+            pattern: String::from("a"),
+            password: String::from("abcde")
+        };
+        assert_eq!(pv.is_positionally_valid(), true);
+    }
+
+    #[test]
+    fn it_should_be_invalid_when_neither_position_matches_the_pattern() {
+        let pv = PasswordValidator {
+            min_occurrence: 1,
+            max_occurrence: 3,
+            pattern: String::from("b"),
+            password: String::from("cdefg")
+        };
+        assert_eq!(pv.is_positionally_valid(), false);
+    }
+
+    #[test]
+    fn it_should_be_invalid_when_both_positions_match_the_pattern() {
+        let pv = PasswordValidator {
+            min_occurrence: 1,
+            max_occurrence: 3,
+            pattern: String::from("c"),
+            password: String::from("ccccccccc")
+        };
+        assert_eq!(pv.is_positionally_valid(), false);
     }
 
     #[test]
