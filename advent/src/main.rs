@@ -4,6 +4,8 @@ mod day02_1;
 mod day02_2;
 mod inputs;
 mod parsers;
+mod day03;
+
 use inputs::fetch_input_file;
 
 fn main() {
@@ -11,6 +13,7 @@ fn main() {
     println!("Solution for Day 01 Pt. 2 is {}", do_day01_2());
     println!("Solution for Day 02 Pt. 1 is {}", do_day02_1());
     println!("Solution for Day 02 Pt. 2 is {}", do_day02_2());
+    println!("Solution for Day 03 Pt. 1 is {}", do_day03_1());
 }
 
 fn do_day01_1() -> i32 {
@@ -31,4 +34,9 @@ fn do_day02_1() -> i32 {
 fn do_day02_2() -> i32 {
     use day02_2::day02_2_function;
     day02_2_function(&fetch_input_file("src/inputs/day02"))
+}
+
+fn do_day03_1() -> usize {
+    use day03::{day03_1_function, Slope};
+    day03_1_function(&fetch_input_file("src/inputs/day03"), Slope {right: 3, down: 1})
 }
