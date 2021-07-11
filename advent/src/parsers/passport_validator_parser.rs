@@ -2,18 +2,14 @@ use std::collections::HashMap;
 extern crate nom;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while},
-    character::complete::{
-        alpha1, anychar, digit1, line_ending, multispace0, multispace1, not_line_ending, space1,
-    },
-    combinator::{map, map_res, not, peek, rest},
-    error::{Error, ParseError},
-    multi::{count, fold_many0, many0, many1, many_till, separated_list1},
-    sequence::{delimited, pair, preceded, terminated},
+    bytes::complete::tag,
+    character::complete::{digit1, line_ending, not_line_ending},
+    combinator::map,
+    multi::{many0, many_till, separated_list1},
+    sequence::{pair, terminated},
     IResult,
 };
 use regex::Regex;
-use std::num::ParseIntError;
 use std::str::FromStr;
 
 pub fn parse_key_value(input: &str) -> HashMap<&str, &str> {
@@ -173,7 +169,7 @@ impl Passport {
     fn has_valid_hcl(&self) -> bool {
         match parse_hcl(self.hcl.as_ref().unwrap()) {
             None => false,
-            Some(v) => true,
+            Some(_) => true,
         }
     }
 
@@ -254,6 +250,7 @@ fn parse_hcl(input: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    use super::nom::{combinator::not, multi::count};
     use super::*;
 
     const INVALID_PASSPORTS: &str = "eyr:1972 cid:100
@@ -476,7 +473,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719";
             ),
             String::from("hgt:59cm ecl:zzz eyr:2038 hcl:74454a iyr:2023 pid:3556412378 byr:2007"),
         ];
-        let bb = parse_possible_passports(INVALID_PASSPORTS).unwrap();
         assert_eq!(
             parse_possible_passports(INVALID_PASSPORTS),
             Ok(("", expected))
@@ -507,7 +503,7 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719";
 
             Ok(("", Vec::new()))
         }
-        println!("{:?}", parser(INVALID_PASSPORTS).unwrap())
+        parser(VALID_PASSPORTS).unwrap();
     }
 
     #[test]
