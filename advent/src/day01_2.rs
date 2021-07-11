@@ -3,7 +3,7 @@ TODO:
 Optimize both day 1 solutions
 
  */
-pub fn day01_2_function(input: &str) -> i32{
+pub fn day01_2_function(input: &str) -> i32 {
     let mut result: i32 = 0;
     let v: Vec<&str> = input.split("\n").collect();
     let mut v2 = Vec::new();
@@ -15,17 +15,17 @@ pub fn day01_2_function(input: &str) -> i32{
     let mut sum: i32 = 0;
     for item in v2 {
         if sum == 2020 {
-            break
+            break;
         }
         for item2 in v3.clone() {
             if sum == 2020 {
-                break
+                break;
             }
             for item3 in v4.clone() {
                 sum = item + item2 + item3;
                 if sum == 2020 {
                     result = item * item2 * item3;
-                    break
+                    break;
                 }
             }
         }

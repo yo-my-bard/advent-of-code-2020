@@ -5,14 +5,14 @@ TODO:
 - Review TDD process: was able to write a test and get it to compile and green quickly by brute force.
   Stuck at what test/step should naturally come next?
  */
-use crate::parsers::{parse_input_string};
+use crate::parsers::parse_input_string;
 
 pub fn day02_1_function(input: &str) -> i32 {
     let vec: Vec<&str> = input.split("\n").collect();
     let mut count = 0;
     for v in vec.clone() {
         match parse_input_string(v.trim().as_bytes()) {
-            Err(_) => {},
+            Err(_) => {}
             Ok((unmatched, pv)) => {
                 if unmatched.is_empty() && pv.is_valid() {
                     count += 1

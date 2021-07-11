@@ -9,7 +9,6 @@ TODO:
 - Learn, once again, what is str *really*?
  */
 
-
 pub fn day03_1_function(input: &str, slope: Slope) -> usize {
     let tree = '#';
     find_map_spots_visited(transform_to_2d(input), slope.right, slope.down)
@@ -37,9 +36,7 @@ fn transform_to_2d(input: &str) -> Vec<Vec<char>> {
     return_vec
 }
 
-fn find_map_spots_visited(ndarray: Vec<Vec<char>>,
-                          right: usize,
-                          down: usize) -> Vec<char> {
+fn find_map_spots_visited(ndarray: Vec<Vec<char>>, right: usize, down: usize) -> Vec<char> {
     if ndarray.is_empty() {
         return Vec::new();
     }
@@ -57,15 +54,17 @@ fn find_map_spots_visited(ndarray: Vec<Vec<char>>,
 
 pub struct Slope {
     pub right: usize,
-    pub down: usize
+    pub down: usize,
 }
 
 pub fn get_slopes() -> Vec<Slope> {
-    vec![Slope{right: 1, down: 1},
-         Slope{right: 3, down: 1},
-         Slope{right: 5, down: 1},
-         Slope{right: 7 , down: 1},
-         Slope{right: 1, down: 2}]
+    vec![
+        Slope { right: 1, down: 1 },
+        Slope { right: 3, down: 1 },
+        Slope { right: 5, down: 1 },
+        Slope { right: 7, down: 1 },
+        Slope { right: 1, down: 2 },
+    ]
 }
 
 #[cfg(test)]
@@ -86,12 +85,12 @@ mod tests {
 
     #[test]
     fn it_should_count_the_number_of_trees_encountered() {
-        let result = day03_1_function(SNIPPET, Slope {right: 3, down: 1});
+        let result = day03_1_function(SNIPPET, Slope { right: 3, down: 1 });
         assert_eq!(result, 7);
-        assert_eq!(day03_1_function(SNIPPET, Slope {right: 1, down: 1}), 2);
-        assert_eq!(day03_1_function(SNIPPET, Slope {right: 5, down: 1}), 3);
-        assert_eq!(day03_1_function(SNIPPET, Slope {right: 7, down: 1}), 4);
-        assert_eq!(day03_1_function(SNIPPET, Slope {right: 1, down: 2}), 2);
+        assert_eq!(day03_1_function(SNIPPET, Slope { right: 1, down: 1 }), 2);
+        assert_eq!(day03_1_function(SNIPPET, Slope { right: 5, down: 1 }), 3);
+        assert_eq!(day03_1_function(SNIPPET, Slope { right: 7, down: 1 }), 4);
+        assert_eq!(day03_1_function(SNIPPET, Slope { right: 1, down: 2 }), 2);
     }
 
     #[test]
@@ -100,9 +99,10 @@ mod tests {
         #...#...#..
         .#....#..#.";
         let result = transform_to_2d(snippet);
-        let expected: Vec<Vec<char>> = vec![vec!['.', '.', '#', '#', '.', '.', '.', '.', '.', '.', '.'],
+        let expected: Vec<Vec<char>> = vec![
+            vec!['.', '.', '#', '#', '.', '.', '.', '.', '.', '.', '.'],
             vec!['#', '.', '.', '.', '#', '.', '.', '.', '#', '.', '.'],
-            vec!['.', '#', '.', '.', '.', '.', '#', '.', '.', '#', '.']
+            vec!['.', '#', '.', '.', '.', '.', '#', '.', '.', '#', '.'],
         ];
         assert_eq!(result, expected);
         assert_eq!(result[0][0], '.');
@@ -115,7 +115,7 @@ mod tests {
         #...#...#..
         .#....#..#.";
         let array2d = transform_to_2d(snippet);
-        let slope = Slope {right: 3, down: 1};
+        let slope = Slope { right: 3, down: 1 };
         let result = find_map_spots_visited(array2d, slope.right, slope.down);
         let expected: Vec<char> = vec!['.', '#'];
         assert_eq!(result, expected)

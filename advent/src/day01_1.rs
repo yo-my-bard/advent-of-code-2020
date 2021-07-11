@@ -11,7 +11,7 @@ pub fn day01_1_function(input: &str) -> i32 {
     let mut multiple_1: i32 = 0;
     let mut multiple_2: i32 = 0;
     let v: Vec<&str> = input.split("\n").collect();
-    for num in v.clone()  {
+    for num in v.clone() {
         multiple_1 = str::parse(num.trim()).unwrap();
         for other_num in v.clone() {
             multiple_2 = str::parse(other_num.trim()).unwrap();
@@ -36,6 +36,4 @@ mod tests {
         let snippet = "1721\n979\n366\n299\n675\n1456";
         assert_eq!(day01_1_function(snippet), 514579);
     }
-
-
 }
