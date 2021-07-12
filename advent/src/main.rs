@@ -4,6 +4,7 @@ mod day02_1;
 mod day02_2;
 mod day03;
 mod day04;
+mod day05;
 mod inputs;
 mod parsers;
 
