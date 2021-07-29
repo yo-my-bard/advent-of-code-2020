@@ -11,14 +11,16 @@
  I am also very new to Rust and still a baby software engineer. When I get my mic, I can talk more about that :)
  So the code so far... I have some tests, and some implementations
  */
+use indextree::{Arena, NodeId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 struct BoardingPass {
-    row: u8,
-    column: u8,
+    row: u32,
+    column: u32,
+    seat_id: u32,
 }
 
 impl BoardingPass {
@@ -39,7 +41,7 @@ impl BoardingPass {
         valid_first_chars && valid_second_chars
     }
 
-    fn find_the_row(s: &str) -> i32 {
+    fn find_the_row(s: &str) -> u32 {
         /*
         input: FBFBBFFRLR
         Rows are 0 - 127, 2^7
@@ -61,9 +63,44 @@ impl BoardingPass {
          We have a smaller example to work with (from 128 rows, to 8 rows). We think trees are still a good idea.
          Next we can write some simple tests that test this smaller tree. We also need to learn how to write a tree.
          Sneak peeking at some Rust docs.... then done with stream. Thanks for watching!
-         TODO: Write *tests* for a smaller tree, implement the tree; write tests for bigger tree, implement tree.
          */
-        70 // faked it and it passed; now we need to remove duplication
+        let tree_array = Self::generate_boarding_pass_tree(8);
+        let mut node = Node::new(tree_array, s);
+        node.traverse_tree_array();
+        node.get_current_value() - node.offset
+    }
+
+    fn find_the_column(s: &str) -> u32 {
+        let tree_array = Self::generate_boarding_pass_tree(4);
+        let mut node = Node::new(tree_array, s);
+        node.traverse_tree_array();
+        node.get_current_value() - node.offset // faked it and it passed; now we need to remove duplication
+    }
+
+    /// Generates a tree using a vector, breadth-first representation
+    /// Wiki: https://en.wikipedia.org/wiki/Binary_tree#Arrays
+    /// Levels here is referring to the depth of a perfect binary tree (2 children all internal nodes, and leaf nodes are at the same level).
+    /// https://towardsdatascience.com/5-types-of-binary-tree-with-cool-illustrations-9b335c430254
+    /// For example:
+    ///                       R
+    ///                   F      B
+    ///               F   B    F  B
+    ///              F B  F B  F B F B
+    /// This tree's levels = 4.
+    fn generate_boarding_pass_tree(levels: u32) -> TreeArray {
+        let base: u32 = 2;
+        let max_nodes = base.pow(levels) - 1;
+        let terminal_nodes = base.pow(levels - 1);
+        // index_value_offset is the left most value of lowest value, it's also the offset to get the numerical value of the row
+        let index_value_offset = max_nodes - terminal_nodes;
+
+        let tree_array: Vec<u32> = (0..max_nodes).collect();
+        TreeArray {
+            array: tree_array,
+            max_nodes,
+            terminal_nodes,
+            index_value_offset,
+        }
     }
 }
 
@@ -82,8 +119,12 @@ impl FromStr for BoardingPass {
                 message: format!("invalid chars found for: {}", s),
             });
         }
-        todo!() // if the code reaches here then validations look good.
-                // But now we need to represent the letters in a way that lets us translate them to rows/columns
+
+        Ok(BoardingPass {
+            row: Self::find_the_row(&s[..7]),
+            column: Self::find_the_column(&s[7..]),
+            seat_id: (Self::find_the_row(&s[..7]) * 8) + Self::find_the_column(&s[7..]),
+        })
     }
 }
 
@@ -104,32 +145,83 @@ impl Error for ParseBoardingPassError {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
-struct Node<'a> {
-    left: Option<Box<&'a Node<'a>>>, // Seems sus to have the same lifetime as parent node, maybe best to have diff lifetimes?
-    right: Option<Box<&'a Node<'a>>>, // Then again, I probably need to read more about lifetimes anyways
-    parent: Option<Box<&'a Node<'a>>>, // having both sounds weird?
+pub(crate) fn day05_1(input: &str) -> u32 {
+    input
+        .split("\r\n")
+        .map(BoardingPass::from_str)
+        .filter(|bp| bp.is_ok())
+        .map(|bp_ok| bp_ok.unwrap())
+        .max_by_key(|good_bp| good_bp.seat_id)
+        .map_or(0, |final_bp| final_bp.seat_id)
+}
+
+fn scan_boarding_pass(input: &str) -> Result<BoardingPass, ParseBoardingPassError> {
+    // We have code duplication here as a result, not to mention we are not actually using our input!
+    BoardingPass::from_str(input)
+}
+
+struct TreeArray {
+    array: Vec<u32>,
+    max_nodes: u32,
+    terminal_nodes: u32,
+    index_value_offset: u32,
+}
+struct Node {
+    tree_array: Vec<u32>,
+    boarding_pass: String,
+    current: Option<u32>,
+    offset: u32,
 }
 
 impl Node {
-    pub fn new<'a>(left: Option<Box<&'a Node>>, right: Option<Box<&'a Node>>) -> Self {
-        // bit of a bummer to *have* to supply both, but that can be a limitation of the new method
-        // You can always use Node {} with default to supply None as well
+    fn new(tree_array: TreeArray, boarding_pass: &str) -> Node {
         Node {
-            left,
-            right,
-            ..Default::default()
+            tree_array: tree_array.array,
+            boarding_pass: boarding_pass.to_owned(),
+            current: Some(0),
+            offset: tree_array.index_value_offset,
         }
     }
-}
 
-fn day05_1(input: &str) -> i32 {
-    0
-}
+    fn traverse_tree_array(&mut self) {
+        let mut error = false;
+        for c in self.boarding_pass.chars() {
+            if c == 'F' || c == 'L' {
+                self.current = match self.current {
+                    Some(num) => Some((2 * num) + 1),
+                    None => {
+                        error = true;
+                        break;
+                    }
+                }
+            } else {
+                self.current = match self.current {
+                    Some(num) => Some((2 * num) + 2),
+                    None => {
+                        error = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if error {
+            println!("Something bad is happening in Oz");
+        }
+    }
 
-fn scan_boarding_pass(input: &str) -> BoardingPass {
-    // We have code duplication here as a result, not to mention we are not actually using our input!
-    BoardingPass { row: 70, column: 7 } // Note part of TDD: if you don't know the answer right away, fake it to get to Green test result quickly
+    fn get_current_value(&self) -> u32 {
+        match self.current {
+            Some(num) => num,
+            None => 0,
+        }
+    }
+
+    // fn is_legit_row(&self, tree_array: &TreeArray) -> bool {
+    //     match self.current {
+    //         Some(num) => tree_array.array.clone().len() > u32::try_usize(num).unwrap(),
+    //         None => false,
+    //     }
+    // }
 }
 
 #[cfg(test)]
@@ -141,8 +233,19 @@ mod tests {
     #[test]
     fn it_should_find_the_right_row_column_and_seat() {
         let snippet = "FBFBBFFRLR"; // test input
-        let expected = BoardingPass { row: 70, column: 7 }; // representation of a boarding pass
-        assert_eq!(scan_boarding_pass(snippet), expected) // if I scan the input, I should get the output
+        let another_snippet = "BBFFBBFRLL";
+        let expected = BoardingPass {
+            row: 44,
+            column: 5,
+            seat_id: 357,
+        }; // representation of a boarding pass
+        let another_expected = Ok(BoardingPass {
+            row: 102,
+            column: 4,
+            seat_id: 820,
+        });
+        assert_eq!(BoardingPass::from_str(snippet), Ok(expected)); // if I scan the input, I should get the output
+        assert_eq!(BoardingPass::from_str(another_snippet), another_expected);
     }
 
     // The above test is pretty close to what I need, if not 100%. The problem is it's too big of a problem.
@@ -152,13 +255,14 @@ mod tests {
     #[test]
     fn it_should_find_the_right_row() {
         let snippet = "FBFBBFFRLR";
-        assert_eq!(BoardingPass::find_the_row(snippet), 70); // We deliberately write a test that fails but has what we want
+        assert_eq!(BoardingPass::find_the_row(&snippet[..7]), 44); // We deliberately write a test that fails but has what we want
     }
 
     // Then what if I write code that just finds the right column?
     #[test]
     fn it_should_find_the_right_column() {
-        assert!(true)
+        let snippet = "FBFBBFFRLR";
+        assert_eq!(BoardingPass::find_the_column(&snippet[7..]), 5);
     }
 
     /*
@@ -189,63 +293,99 @@ mod tests {
             message: format!("invalid chars found for: {}", other_bad_snippet),
         });
 
-        println!("{:?}", BoardingPass::from_str(other_bad_snippet));
         BoardingPass::from_str(other_bad_snippet).map_err(|z| println!("{:?}", z.source()));
         assert_eq!(BoardingPass::from_str(snippet), expected_1);
         assert_eq!(BoardingPass::from_str(other_bad_snippet), expected_2);
+    }
+
+    #[test]
+    fn i_play_with_arena() {
+        let arena = &mut Arena::new();
+        let a = arena.new_node(1);
+        let b = arena.new_node(2);
+        let c = arena.new_node(3);
+        a.append(b, arena);
+        a.append(c, arena);
+        a.descendants(arena).for_each(|node| println!("{:#}", node));
+        b.following_siblings(arena)
+            .filter(|&n| n != b)
+            .for_each(|node| println!("{:?}", node));
+        b.preceding_siblings(arena)
+            .filter(|&n| n != b)
+            .for_each(|node_id| println!("{:?}", node_id));
     }
 
     #[test] // The purpose of this test changed since I started, so renaming
     fn it_should_create_a_simple_node_with_a_right_and_left_child() {
         // I don't really know what I'm doing with this tree data structure, so I'm going to see if I can fake it
         // Let's create a node representation. Nodes can have zero, one, or two children
-        let two_children = Node {
-            right: Some(Box::new(&Node {
-                ..Default::default()
-            })),
-            left: Some(Box::new(&Node {
-                ..Default::default()
-            })),
-            parent: None,
-        };
-        let zero_children = Node {
-            right: None,
-            left: None,
-            parent: None,
-        }; // Options should be safer than using nulls in Rust
-        let one_child = Node {
-            left: Some(Box::new(&Node {
-                ..Default::default()
-            })),
-            ..Default::default()
-        }; // There should be a notation to have structs fill in the rest - Google
-           // Let's see if we can fix some compilation errors
-        assert_eq!(Node::new(None, None), zero_children);
-        assert_eq!(Node::new(Some(Default::default()), None), one_child); //Ah okay thought this passed, but it was the failure.
-        assert_eq!(
-            Node::new(Some(Default::default()), Some(Default::default())),
-            two_children
-        ); // oops switched them
-           // Since we originally wanted to create a tree, the children actually need to be Nodes themselves
-           // So let's fix the tests to what we want
-           // I wonder if using Default::default() as arguments like this is idiomatic...
-           // Ok - found recursion so once more unto the breach we go...
+        let arena = &mut Arena::new();
+        let root = arena.new_node("root");
+        let left = arena.new_node("left");
+        let right = arena.new_node("right");
+
+        // No children yet
+        assert!(root.children(arena).next().is_none());
+        // Add one child
+        root.append(left, arena);
+        let mut children = root.children(arena);
+        assert_eq!(children.next(), Some(left));
+        assert!(children.next().is_none());
+        // Add second child
+        root.append(right, arena);
+        let mut more_children = root.children(arena);
+        assert_eq!(more_children.next(), Some(left));
+        assert_eq!(more_children.next(), Some(right));
+        assert!(more_children.next().is_none());
     }
 
     #[test]
     fn node_should_know_its_parent() {
-        let child: Node = Default::default();
-        let child_in_box = Box::new(&child);
-        let parent = Node::new(Some(child_in_box), None);
-        // Seems I am using Owned values in places that could benefit from using Borrowed values. Let's find out.
-        assert_eq!(child_in_box.parent, Some(Box::new(parent)))
-        // On basic TDD principles, we get to create the API we *think* we want so let's try this one
-        // If we add a parent as a field like above, our constructor ::new() would have to decide how to handle it
-        // Should children know their parents when constructed or we need another API for that?
-        // I have no clue right now so I'll make a best guess here
-        // interestingly, wonder if the comparison has to be boxed as well? Like Some(Box::new(parent))? There's probably some symbol that would help...maybe
-        // Borrow checker to the rescue? I don't fully understand what I read so let's listen to the borrow checker here
-        // but how the heck do I borrow this...Google
+        let arena = &mut Arena::new();
+        let root = arena.new_node(9999);
+        let child = arena.new_node(9999);
+        root.append(child, arena);
+
+        assert!(arena.get(root).is_some());
+        arena.get(root).map(|n| assert!(n.parent().is_none()));
+
+        assert!(arena.get(child).is_some());
+        arena.get(child).map(|n| assert_eq!(n.parent(), Some(root)));
+    }
+
+    #[test]
+    fn create_binary_tree_at_1_level() {
+        let tree_array = BoardingPass::generate_boarding_pass_tree(1);
+        // let actual = root.descendants(arena).collect::<Vec<NodeId>>().len();
+        let actual = tree_array.array.len();
+        assert_eq!(actual, 1); // creates 1 nodes
+    }
+
+    #[test]
+    fn create_binary_tree_at_2_levels() {
+        let tree_array = BoardingPass::generate_boarding_pass_tree(2);
+        let actual = tree_array.array.len();
+        assert_eq!(actual, 3); // creates 3 nodes
+    }
+
+    #[test]
+    fn create_binary_tree_at_3_levels() {
+        let tree_array = BoardingPass::generate_boarding_pass_tree(3);
+        let actual = tree_array.array.len();
+        assert_eq!(actual, 7);
+    }
+
+    #[test]
+    fn create_binary_tree_at_n_levels() {
+        let tree_array = BoardingPass::generate_boarding_pass_tree(8);
+        let actual = tree_array.array.len();
+        assert_eq!(actual, 255)
+    }
+
+    #[test]
+    fn should_find_max_seat_id() {
+        let snippet = "BFFFBBFRRR\nFFFBBBFRRR\nBBFFBBFRLL";
+        assert_eq!(day05_1(snippet), 820);
     }
 }
 

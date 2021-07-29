@@ -11,3 +11,6 @@ version = "6"
 
 [dependencies.regex]
 version = "1"
+
+[dependencies.indextree]
+version = "4"
