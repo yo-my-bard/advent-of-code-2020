@@ -155,9 +155,23 @@ pub(crate) fn day05_1(input: &str) -> u32 {
         .map_or(0, |final_bp| final_bp.seat_id)
 }
 
-fn scan_boarding_pass(input: &str) -> Result<BoardingPass, ParseBoardingPassError> {
-    // We have code duplication here as a result, not to mention we are not actually using our input!
-    BoardingPass::from_str(input)
+pub(crate) fn day05_2(input: &str) -> u32 {
+    let mut all_seats: Vec<BoardingPass> = input
+        .split("\r\n")
+        .map(BoardingPass::from_str)
+        .filter(|bp| bp.is_ok())
+        .map(|bp_ok| bp_ok.unwrap())
+        .collect();
+    all_seats.sort_by_key(|bp| bp.seat_id);
+    let min_seat_id = all_seats.get(0).unwrap().seat_id;
+    let max_seat_id = all_seats.get(all_seats.len() - 1).unwrap().seat_id;
+    let all_seat_ids: Vec<u32> = all_seats.iter().map(|bp| bp.seat_id).collect();
+    for val in min_seat_id..max_seat_id {
+        if !all_seat_ids.contains(&val) {
+            return val;
+        }
+    }
+    0
 }
 
 struct TreeArray {
@@ -384,7 +398,7 @@ mod tests {
 
     #[test]
     fn should_find_max_seat_id() {
-        let snippet = "BFFFBBFRRR\nFFFBBBFRRR\nBBFFBBFRLL";
+        let snippet = "BFFFBBFRRR\r\nFFFBBBFRRR\r\nBBFFBBFRLL";
         assert_eq!(day05_1(snippet), 820);
     }
 }
