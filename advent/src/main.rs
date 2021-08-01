@@ -5,6 +5,7 @@ mod day02_2;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
 mod inputs;
 mod parsers;
 
@@ -18,6 +19,7 @@ fn main() {
     println!("Solutions for Day 03: (Pt. 1, Pt. 2) is {:?}", do_day03());
     println!("Solutions for Day 04: (Pt. 1, Pt. 2) is {:?}", do_day04());
     println!("Solutions for Day 05: (Pt. 1, Pt. 2) is {:?}", do_day05());
+    println!("Solutions for Day 06: (Pt. 1, Pt. 2) is {:?}", do_day06());
 }
 
 fn do_day01_1() -> i32 {
@@ -61,5 +63,12 @@ fn do_day05() -> (u32, u32) {
     use day05::*;
     let pt1 = day05_1(&fetch_input_file("src/inputs/day05"));
     let pt2 = day05_2(&fetch_input_file("src/inputs/day05"));
+    (pt1, pt2)
+}
+
+fn do_day06() -> (usize, usize) {
+    use day06::*;
+    let pt1 = day06_1(&fetch_input_file("src/inputs/day06"));
+    let pt2 = day06_2(&fetch_input_file("src/inputs/day06"));
     (pt1, pt2)
 }
