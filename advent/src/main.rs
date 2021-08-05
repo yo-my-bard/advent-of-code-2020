@@ -6,8 +6,11 @@ mod day03;
 mod day04;
 mod day05;
 mod day06;
+mod day07;
 mod inputs;
 mod parsers;
+#[macro_use]
+extern crate pest_derive;
 
 use inputs::fetch_input_file;
 
@@ -20,6 +23,7 @@ fn main() {
     println!("Solutions for Day 04: (Pt. 1, Pt. 2) is {:?}", do_day04());
     println!("Solutions for Day 05: (Pt. 1, Pt. 2) is {:?}", do_day05());
     println!("Solutions for Day 06: (Pt. 1, Pt. 2) is {:?}", do_day06());
+    println!("Solutions for Day 07: (Pt. 1, Pt. 2) is {:?}", do_day07());
 }
 
 fn do_day01_1() -> i32 {
@@ -70,5 +74,12 @@ fn do_day06() -> (usize, usize) {
     use day06::*;
     let pt1 = day06_1(&fetch_input_file("src/inputs/day06"));
     let pt2 = day06_2(&fetch_input_file("src/inputs/day06"));
+    (pt1, pt2)
+}
+
+fn do_day07() -> (usize, usize) {
+    use day07::*;
+    let pt1 = day07_1(&fetch_input_file("src/inputs/day07"));
+    let pt2 = day07_2(&fetch_input_file("src/inputs/day07"));
     (pt1, pt2)
 }

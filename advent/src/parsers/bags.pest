@@ -1,0 +1,8 @@
+color = { ASCII_ALPHA+ ~ " " ~ ASCII_ALPHA+ }
+subject = { color }
+nocontains = { "no other bags." }
+quant = { ASCII_DIGIT+ }
+bag_item = { quant ~ " " ~ color ~ ((" bags" | " bag") ~ (", " | ".")?) }
+items = _{ nocontains | bag_item+ }
+
+bag = { SOI ~ subject ~ " bags contain " ~ items ~ EOI }
