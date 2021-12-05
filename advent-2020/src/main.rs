@@ -77,7 +77,7 @@ fn do_day06() -> (usize, usize) {
     (pt1, pt2)
 }
 
-fn do_day07() -> (usize, usize) {
+fn do_day07() -> (usize, i128) {
     use day07::*;
     let pt1 = day07_1(&fetch_input_file("src/inputs/day07"));
     let pt2 = day07_2(&fetch_input_file("src/inputs/day07"));

@@ -8,8 +8,10 @@ pub fn day07_1(input: &str) -> usize {
     find_possible_bag_holders_for_a_bag("shiny gold", &all_bags).len()
 }
 
-pub(crate) fn day07_2(input: &str) -> usize {
-    0
+pub(crate) fn day07_2(input: &str) -> i128 {
+    let all_bags = parse_many_bags_data(input);
+    let shiny_gold = get_bag_from_color("shiny gold", &all_bags);
+    count_bags_inside_smaller(&all_bags, shiny_gold, 0) - 1
 }
 
 fn parse_single_bag_data(rule: &str) -> Bag {
@@ -113,10 +115,59 @@ fn find_possible_bag_holders_for_a_bag<'a, 'b>(
     possible_holders_stack
 }
 
+fn count_bags_inside(input: &str, bag_color: &str) -> i8 {
+    let all_bags = parse_many_bags_data(input);
+    find_possible_bag_holders_for_a_bag("shiny gold", &all_bags);
+    /*
+    First we get our bag color which holds at least 1 type of bag, but could be multiple version of each type of bag
+
+     */
+    126
+}
+
+fn count_bags_inside_smaller(all_bags: &Vec<Bag>, current_bag: Bag, mut amount: i128) -> i128 {
+    if current_bag.contains.is_empty() {
+        amount += 1;
+        dbg!((&current_bag, &amount));
+        return amount;
+    }
+    for innard in current_bag.contains.iter() {
+        let quant = innard.get("quantity").unwrap();
+        let color = innard.get("color").unwrap();
+        amount += (quant.parse().unwrap_or(0)
+            * count_bags_inside_smaller(all_bags, get_bag_from_color(color, all_bags), amount));
+    }
+    amount += 1;
+    // dbg!((&current_bag, &amount));
+    amount
+}
+
+fn get_bag_from_color(color: &str, all_bags: &Vec<Bag>) -> Bag {
+    let default_bag = Bag {
+        color: color.to_string(),
+        contains: Vec::new(),
+    };
+
+    all_bags
+        .iter()
+        .filter(|&b| b.color == color)
+        .next()
+        .unwrap_or_else(|| &default_bag)
+        .to_owned()
+}
+
 #[derive(Debug, PartialEq)]
 struct Bag {
     color: String,
     contains: Vec<HashMap<String, String>>,
+}
+
+impl Clone for Bag {
+    fn clone(&self) -> Self {
+        let color = self.color.clone();
+        let contains = self.contains.clone();
+        Self { color, contains }
+    }
 }
 
 #[derive(Parser)]
@@ -277,5 +328,36 @@ faded blue bags contain 1 bright white bag.";
         let all_bags = parse_many_bags_data(snippet);
         let actual = find_possible_bag_holders_for_a_bag("shiny gold", &all_bags);
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn should_count_how_many_bags_are_required_inside_another_bag() {
+        let snippet = "shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain 2 dark yellow bags.
+dark yellow bags contain 2 dark green bags.
+dark green bags contain 2 dark blue bags.
+dark blue bags contain 2 dark violet bags.
+dark violet bags contain no other bags.";
+        assert_eq!(count_bags_inside(snippet, "shiny gold"), 126);
+
+        let all_bags = parse_many_bags_data(snippet);
+        assert_eq!(
+            count_bags_inside_smaller(&all_bags, get_bag_from_color("shiny gold", &all_bags), 0)
+                - 1,
+            126
+        );
+    }
+
+    #[test]
+    fn should_count_how_many_bags_are_required_inside_smaller_bag() {
+        let snippet = "shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.";
+        let all_bags = parse_many_bags_data(snippet);
+        assert_eq!(
+            count_bags_inside_smaller(&all_bags, get_bag_from_color("shiny gold", &all_bags), 0)
+                - 1,
+            6
+        );
     }
 }

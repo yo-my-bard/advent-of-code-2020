@@ -1,2 +1,2 @@
-# advent-of-code-2020
+# advent-of-code
 Suspiciously trying advent of code
