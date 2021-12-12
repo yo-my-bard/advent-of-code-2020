@@ -34,13 +34,13 @@ fn skip_to_my_lou(input: &str) -> usize {
     let mut iter_2 = input.split_whitespace().skip(3);
     loop {
         let val_1 = match iter_1.next() {
-            None => {break}
-            Some(val) => val
+            None => break,
+            Some(val) => val,
         };
 
         let val_2 = match iter_2.next() {
-            None => {break}
-            Some(val) => val
+            None => break,
+            Some(val) => val,
         };
 
         if let Ok(val_1_int) = val_1.parse::<i32>() {
@@ -105,4 +105,3 @@ mod tests {
         assert_eq!(day01_2_function(input), 5);
     }
 }
-

@@ -1,5 +1,5 @@
-use std::iter::FromIterator;
 use std::borrow::Borrow;
+use std::iter::FromIterator;
 
 pub fn day03_1_fn(input: &str) -> usize {
     let mut counter = Counter::new(input);
@@ -17,7 +17,7 @@ pub fn day03_2_fn(input: &str) -> usize {
 struct Counter {
     raw_data: String,
     data_array: Vec<Vec<usize>>,
-    columns: usize
+    columns: usize,
 }
 
 trait Day03_1 {
@@ -35,25 +35,16 @@ impl Counter {
         Counter {
             raw_data: String::from(input),
             data_array: Self::make_data_array(input),
-            columns: Self::number_of_columns(input)
+            columns: Self::number_of_columns(input),
         }
     }
 
     pub fn process_data(&mut self) {
-        self.raw_data
-            .split_whitespace()
-            .for_each(|line| {
-                for x in 0..self.columns {
-                    self.data_array[x]
-                        .push(
-                            line
-                                .get(x..=x)
-                                .unwrap()
-                                .parse::<usize>().unwrap()
-                        )
-                }
-            });
-
+        self.raw_data.split_whitespace().for_each(|line| {
+            for x in 0..self.columns {
+                self.data_array[x].push(line.get(x..=x).unwrap().parse::<usize>().unwrap())
+            }
+        });
     }
 
     fn number_of_columns(input: &str) -> usize {
@@ -79,9 +70,7 @@ impl Day03_1 for Counter {
         let mut gamma_binary = Vec::<&str>::with_capacity(self.columns);
         for g in 0..self.columns {
             let num_of_rows = self.data_array[g].len();
-            let sum: usize = self.data_array[g]
-                .iter()
-                .sum();
+            let sum: usize = self.data_array[g].iter().sum();
 
             if sum > num_of_rows / 2 {
                 gamma_binary.push("1");
@@ -89,10 +78,7 @@ impl Day03_1 for Counter {
                 gamma_binary.push("0");
             }
         }
-        i32::from_str_radix(
-            String::from_iter(gamma_binary).borrow(),
-            2
-        ).unwrap() as usize
+        i32::from_str_radix(String::from_iter(gamma_binary).borrow(), 2).unwrap() as usize
     }
 
     fn get_epsilon_rate(&self) -> usize {
@@ -102,9 +88,7 @@ impl Day03_1 for Counter {
         let mut gamma_binary = Vec::<&str>::with_capacity(self.columns);
         for g in 0..self.columns {
             let num_of_rows = self.data_array[g].len();
-            let sum: usize = self.data_array[g]
-                .iter()
-                .sum();
+            let sum: usize = self.data_array[g].iter().sum();
 
             if sum > num_of_rows / 2 {
                 gamma_binary.push("0");
@@ -113,13 +97,8 @@ impl Day03_1 for Counter {
             }
         }
 
-        i32::from_str_radix(
-            String::from_iter(gamma_binary).borrow(),
-            2
-        ).unwrap() as usize
-
+        i32::from_str_radix(String::from_iter(gamma_binary).borrow(), 2).unwrap() as usize
     }
-
 }
 
 impl Day03_2 for Counter {
@@ -135,9 +114,7 @@ impl Day03_2 for Counter {
                 self.data_array[col] // change column
                     .iter()
                     .enumerate()
-                    .filter(|(ind, _)| {
-                        acc.is_empty() || acc.contains(ind)
-                    })
+                    .filter(|(ind, _)| acc.is_empty() || acc.contains(ind))
                     .for_each(|(i, &val)| {
                         if val == 0 {
                             zero_index_stack.push(i);
@@ -167,7 +144,6 @@ impl Day03_2 for Counter {
                     .unwrap()
             });
 
-
         i32::from_str_radix(boo_radley.borrow(), 2).unwrap() as usize
     }
 
@@ -186,9 +162,7 @@ impl Day03_2 for Counter {
                 self.data_array[col] // change column
                     .iter()
                     .enumerate()
-                    .filter(|(ind, _)| {
-                        acc.is_empty() || acc.contains(ind)
-                    })
+                    .filter(|(ind, _)| acc.is_empty() || acc.contains(ind))
                     .for_each(|(i, &val)| {
                         if val == 0 {
                             zero_index_stack.push(i);
@@ -218,11 +192,9 @@ impl Day03_2 for Counter {
                     .unwrap()
             });
 
-
         i32::from_str_radix(boo_radley.borrow(), 2).unwrap() as usize
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -264,9 +236,10 @@ mod tests {
 
         assert_eq!(counter.data_array.len(), 5);
         assert_eq!(counter.data_array.len(), counter.columns);
-        counter.data_array.iter()
+        counter
+            .data_array
+            .iter()
             .for_each(|col| assert_eq!(col.len(), 3));
-
     }
 
     #[test]

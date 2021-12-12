@@ -4,16 +4,20 @@ pub fn day02_1_fn(input: &str) -> usize {
         .split(|c| (c == '\n') || (c == '\r'))
         .filter(|s| !s.is_empty())
         .for_each(|item| {
-            let distance = item.split_whitespace()
-                .last()
-                .map_or_else(|| 0,
-                             |last| last.parse::<usize>()
-                                 .map_or_else(|_| 0, |ok| ok)
-                );
+            let distance = item.split_whitespace().last().map_or_else(
+                || 0,
+                |last| last.parse::<usize>().map_or_else(|_| 0, |ok| ok),
+            );
             match Compass::navigate(item.to_string()) {
-                Direction::FORWARD => {compass.go_forward(distance);}
-                Direction::DOWN => {compass.go_deeper(distance);}
-                Direction::UP => {compass.surface(distance);}
+                Direction::FORWARD => {
+                    compass.go_forward(distance);
+                }
+                Direction::DOWN => {
+                    compass.go_deeper(distance);
+                }
+                Direction::UP => {
+                    compass.surface(distance);
+                }
                 Direction::LESS => {}
             }
         });
@@ -26,16 +30,20 @@ pub fn day02_2_fn(input: &str) -> usize {
         .split(|c| (c == '\n') || (c == '\r'))
         .filter(|s| !s.is_empty())
         .for_each(|item| {
-            let distance = item.split_whitespace()
-                .last()
-                .map_or_else(|| 0,
-                             |last| last.parse::<usize>()
-                                 .map_or_else(|_| 0, |ok| ok)
-                );
+            let distance = item.split_whitespace().last().map_or_else(
+                || 0,
+                |last| last.parse::<usize>().map_or_else(|_| 0, |ok| ok),
+            );
             match Compass::navigate(item.to_string()) {
-                Direction::FORWARD => {compass.go_forward_and_deeper(distance);}
-                Direction::DOWN => {compass.aim_higher(distance);}
-                Direction::UP => {compass.aim_lower(distance);}
+                Direction::FORWARD => {
+                    compass.go_forward_and_deeper(distance);
+                }
+                Direction::DOWN => {
+                    compass.aim_higher(distance);
+                }
+                Direction::UP => {
+                    compass.aim_lower(distance);
+                }
                 Direction::LESS => {}
             }
         });
@@ -46,7 +54,7 @@ enum Direction {
     FORWARD,
     DOWN,
     UP,
-    LESS
+    LESS,
 }
 
 #[derive(Default)]
