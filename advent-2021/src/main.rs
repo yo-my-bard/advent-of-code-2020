@@ -2,6 +2,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 mod inputs;
 
 use inputs::fetch_input_file;
@@ -11,6 +12,7 @@ fn main() {
     println!("Solutions for Day 02: (Pt. 1, Pt. 2) is {:?}", do_day02());
     println!("Solutions for Day 03: (Pt. 1, Pt. 2) is {:?}", do_day03());
     println!("Solutions for Day 04: (Pt. 1, Pt. 2) is {:?}", do_day04());
+    println!("Solutions for Day 05: (Pt. 1, Pt. 2) is {:?}", do_day05());
 }
 
 fn do_day01() -> (usize, usize) {
@@ -38,5 +40,12 @@ fn do_day04() -> (usize, usize) {
     use day04::*;
     let pt1 = day04_1_fn(&fetch_input_file("src/inputs/day04"));
     let pt2 = day04_2_fn(&fetch_input_file("src/inputs/day04"));
+    (pt1, pt2)
+}
+
+fn do_day05() -> (usize, usize) {
+    use day05::*;
+    let pt1 = day05_1_fn(&fetch_input_file("src/inputs/day05"));
+    let pt2 = day05_2_fn(&fetch_input_file("src/inputs/day05"));
     (pt1, pt2)
 }
