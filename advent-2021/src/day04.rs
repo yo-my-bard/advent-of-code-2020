@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 /*
 Designing a Pub-Sub for this...
 Since bingo boards are the same, we can probably represent them using a vector
@@ -52,7 +54,54 @@ pub fn day04_1_fn(input: &str) -> usize {
 }
 
 pub fn day04_2_fn(input: &str) -> usize {
-    0
+    let first_line = input
+        .split_whitespace()
+        .next()
+        .expect("unexpected input format");
+    let drawn_numbers = NumbersDraw::new(first_line);
+    let mut boards: Vec<Board> = collect_all_boards(input).iter().map(Board::new).collect();
+    let mut last_call = 0;
+    drawn_numbers
+        .numbers
+        .iter()
+        .map_while(|drawn_num| {
+            last_call = drawn_num
+                .parse::<i32>()
+                .expect("Drawn number wasn't a number");
+            boards.iter_mut().for_each(|brd| {
+                brd.call(drawn_num);
+                if brd.response() && brd.winning_time.is_none() {
+                    brd.winning_time = Some(Instant::now());
+                }
+            });
+            if boards
+                .iter()
+                .any(|predicate| predicate.winning_time.is_none())
+            {
+                return Some(());
+            }
+            None
+        })
+        .last();
+
+    boards.sort_by_key(|b| b.winning_time);
+    let winner = boards
+        .pop()
+        .expect("Should have at least one board after sorting");
+
+    let sum_all_uncalled: i32 = winner
+        .values
+        .iter()
+        .filter(|val| !val.drawn)
+        .map(|val_values_only| {
+            val_values_only
+                .value
+                .parse::<i32>()
+                .expect("Board value was not a number")
+        })
+        .sum();
+
+    (last_call * sum_all_uncalled) as usize
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -66,6 +115,7 @@ struct NumbersDraw<'c> {
 struct Board<'a> {
     values: Vec<Value<'a>>,
     winning_combinations: Vec<Vec<usize>>,
+    winning_time: Option<Instant>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -93,6 +143,7 @@ impl<'a> Board<'a> {
                 .map(Value::new)
                 .collect(),
             winning_combinations: Self::winning_combinations(),
+            winning_time: None,
         }
     }
 
@@ -204,6 +255,13 @@ mod tests {
     }
 
     #[test]
+    fn should_do_day04_2() {
+        let input = &fetch_input_file("src/inputs/day04_test");
+        let actual = day04_2_fn(input);
+        assert_eq!(actual, 1924);
+    }
+
+    #[test]
     fn should_create_comma_separated_struct() {
         let input = "a,b,c,d";
         let expected = NumbersDraw {
@@ -230,7 +288,6 @@ mod tests {
         let actual = collect_all_boards(input);
 
         let boards: Vec<Board> = actual.iter().map(Board::new).collect();
-        dbg!(&boards);
 
         assert_eq!(boards.len(), 3);
         boards
