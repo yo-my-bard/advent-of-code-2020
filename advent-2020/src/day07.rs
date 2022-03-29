@@ -8,7 +8,11 @@ pub fn day07_1(input: &str) -> usize {
     find_possible_bag_holders_for_a_bag("shiny gold", &all_bags).len()
 }
 
-pub(crate) fn day07_2(input: &str) -> i128 {
+pub(crate) fn day07_2(input: &str) -> i32 {
+    /*
+    bags must be color-coded and must contain specific quantities of other color-coded bags
+    How many individual bags are required inside your single shiny gold bag?
+    */
     let all_bags = parse_many_bags_data(input);
     let shiny_gold = get_bag_from_color("shiny gold", &all_bags);
     count_bags_inside_smaller(&all_bags, shiny_gold, 0) - 1
@@ -18,12 +22,8 @@ fn parse_single_bag_data(rule: &str) -> Bag {
     let bag_data: Result<Pairs<Rule>, pest::error::Error<Rule>> = BagParser::parse(Rule::bag, rule);
     let mut color = "";
     let mut contains: Vec<HashMap<String, String>> = Vec::new();
-    bag_data
-        .and_then(|mut pairs| match pairs.next() {
-            Some(pair) => Ok(pair),
-            _ => unreachable!(),
-        })
-        .and_then(|pair| {
+    if let Ok(mut pairs) = bag_data {
+        if let Some(pair) = pairs.next() {
             for innards in pair.into_inner() {
                 match innards.as_rule() {
                     Rule::subject => {
@@ -53,8 +53,8 @@ fn parse_single_bag_data(rule: &str) -> Bag {
                     _ => (),
                 }
             }
-            Ok(())
-        });
+        };
+    }
 
     Bag {
         color: color.to_string(),
@@ -64,14 +64,14 @@ fn parse_single_bag_data(rule: &str) -> Bag {
 
 fn parse_many_bags_data(bags: &str) -> Vec<Bag> {
     let mut bags_list: Vec<Bag> = Vec::new();
-    let to_parse: Vec<&str> = bags.split("\n").collect();
+    let to_parse: Vec<&str> = bags.split('\n').map(str::trim).collect();
     for maybe_bag in to_parse {
         bags_list.push(parse_single_bag_data(maybe_bag))
     }
     bags_list
 }
 
-fn find_direct_bag_holders_for_a_bag<'a, 'b>(color: &'b str, bags: &'a Vec<Bag>) -> Vec<&'a Bag> {
+fn find_direct_bag_holders_for_a_bag<'a, 'b>(color: &'b str, bags: &'a [Bag]) -> Vec<&'a Bag> {
     bags.iter()
         .filter(|&bag| {
             bag.contains
@@ -83,7 +83,7 @@ fn find_direct_bag_holders_for_a_bag<'a, 'b>(color: &'b str, bags: &'a Vec<Bag>)
 
 fn find_possible_bag_holders_for_a_bag<'a, 'b>(
     init_color: &'b str,
-    bags: &'a Vec<Bag>,
+    bags: &'a [Bag],
 ) -> Vec<&'a Bag> {
     let mut color_stack: Vec<&Bag> = Vec::new();
     let mut possible_holders_stack: Vec<&'a Bag> = Vec::new();
@@ -125,24 +125,30 @@ fn count_bags_inside(input: &str, bag_color: &str) -> i8 {
     126
 }
 
-fn count_bags_inside_smaller(all_bags: &Vec<Bag>, current_bag: Bag, mut amount: i128) -> i128 {
+// TODO: Explore in slightly more depth &Vec<_> to &[T] slice for type conversion
+fn count_bags_inside_smaller(all_bags: &[Bag], current_bag: Bag, mut amount: i32) -> i32 {
+    // Base case
     if current_bag.contains.is_empty() {
         amount += 1;
-        dbg!((&current_bag, &amount));
         return amount;
     }
+
     for innard in current_bag.contains.iter() {
         let quant = innard.get("quantity").unwrap();
         let color = innard.get("color").unwrap();
-        amount += (quant.parse().unwrap_or(0)
-            * count_bags_inside_smaller(all_bags, get_bag_from_color(color, all_bags), amount));
+        // I tried to do recursion here and I failed initially ~~
+        // So it seems the issue here was that I was passing the amount dynamically as the accumulator
+        // Seems like the correct thing to do is to always have it start at 0
+        // And I probably would have done it correctly if I had a different variable
+        // Maybe we needed a "start_ammount" variable and then accumulator variable. I think that's how some recursions do it
+        amount += quant.parse().unwrap_or(0)
+            * count_bags_inside_smaller(all_bags, get_bag_from_color(color, all_bags), 0);
     }
     amount += 1;
-    // dbg!((&current_bag, &amount));
     amount
 }
 
-fn get_bag_from_color(color: &str, all_bags: &Vec<Bag>) -> Bag {
+fn get_bag_from_color(color: &str, all_bags: &[Bag]) -> Bag {
     let default_bag = Bag {
         color: color.to_string(),
         contains: Vec::new(),
@@ -150,9 +156,8 @@ fn get_bag_from_color(color: &str, all_bags: &Vec<Bag>) -> Bag {
 
     all_bags
         .iter()
-        .filter(|&b| b.color == color)
-        .next()
-        .unwrap_or_else(|| &default_bag)
+        .find(|&b| b.color == color)
+        .unwrap_or(&default_bag)
         .to_owned()
 }
 
@@ -351,6 +356,7 @@ dark violet bags contain no other bags.";
 
     #[test]
     fn should_count_how_many_bags_are_required_inside_smaller_bag() {
+        // Don't count the shiny gold bag itself, so subtracting 1 makes sense here
         let snippet = "shiny gold bags contain 2 dark red bags.
 dark red bags contain 2 dark orange bags.";
         let all_bags = parse_many_bags_data(snippet);
@@ -358,6 +364,28 @@ dark red bags contain 2 dark orange bags.";
             count_bags_inside_smaller(&all_bags, get_bag_from_color("shiny gold", &all_bags), 0)
                 - 1,
             6
+        );
+    }
+
+    #[test]
+    fn should_count_how_many_bags_are_required_for_32_example() {
+        // This is what helped the most because it revealed the case of multiple bags in a single bag
+        // It previously wasn't handled gracefully
+        let snippet = r"light red bags contain 1 bright white bag, 2 muted yellow bags.
+        dark orange bags contain 3 bright white bags, 4 muted yellow bags.
+        bright white bags contain 1 shiny gold bag.
+        muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.
+        shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.
+        dark olive bags contain 3 faded blue bags, 4 dotted black bags.
+        vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
+        faded blue bags contain no other bags.
+        dotted black bags contain no other bags.";
+
+        let all_bags = parse_many_bags_data(snippet);
+        assert_eq!(
+            count_bags_inside_smaller(&all_bags, get_bag_from_color("shiny gold", &all_bags), 0)
+                - 1,
+            32
         );
     }
 }
