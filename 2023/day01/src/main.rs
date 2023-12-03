@@ -1,5 +1,4 @@
-use phf::phf_map;
-
+#[cfg(test)]
 const TEST_INPUT: &str = r#"
 1abc2
 pqr3stu8vwx
@@ -7,6 +6,7 @@ a1b2c3d4e5f
 treb7uchet
 "#;
 
+#[cfg(test)]
 const TEST_INPUT_B: &str = r#"
 two1nine
 eightwothree
@@ -17,17 +17,9 @@ zoneight234
 7pqrstsixteen
 "#;
 
-const WORD_DIGITS_MAP: phf::Map<&str, &str> = phf_map! {
-    "one" => "1",
-    "two" => "2",
-    "three" => "3",
-    "four" => "4",
-    "five" => "5",
-    "six" => "6",
-    "seven" => "7",
-    "eight" => "8",
-    "nine" => "9",
-};
+const WORD_DIGITS: [&str; 9] = [
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+];
 
 fn extract_digits_from_line(l: &str) -> i32 {
     let first_digit = l.chars().find(char::is_ascii_digit).expect("should exist");
@@ -50,16 +42,17 @@ fn advanced_extract_digits_from_line(l: &str) -> i32 {
 
 fn bad_but_simple_get_first_digit(l: &str) -> String {
     let first_digit_idx = l.find(|c: char| c.is_ascii_digit()).unwrap_or(usize::MAX);
-    let first_word_idx = WORD_DIGITS_MAP
-        .keys()
-        .map(|w| {
+    let first_word_idx = WORD_DIGITS
+        .iter()
+        .enumerate()
+        .map(|(idx, w)| {
             let x = l.find(w).unwrap_or(usize::MAX);
-            (x, w)
+            (x, w, idx)
         })
         .reduce(|acc, e| if acc.0 <= e.0 { acc } else { e })
         .unwrap();
     if first_word_idx.0 <= first_digit_idx {
-        WORD_DIGITS_MAP.get(first_word_idx.1).unwrap().to_string()
+        format!("{:#}", first_word_idx.2 + 1)
     } else {
         l.chars().nth(first_digit_idx).unwrap().to_string()
     }
@@ -67,11 +60,12 @@ fn bad_but_simple_get_first_digit(l: &str) -> String {
 
 fn bad_but_simple_get_second_digit(l: &str) -> String {
     let second_digit_idx = l.rfind(|c: char| c.is_ascii_digit()).unwrap_or(usize::MAX);
-    let second_word_idx = WORD_DIGITS_MAP
-        .keys()
-        .map(|w| {
+    let second_word_idx = WORD_DIGITS
+        .iter()
+        .enumerate()
+        .map(|(idx, w)| {
             let x = l.rfind(w).unwrap_or(usize::MAX);
-            (x, w)
+            (x, w, idx)
         })
         .reduce(|acc, e| {
             if acc.0 != usize::MAX && acc.0 > e.0 {
@@ -89,10 +83,7 @@ fn bad_but_simple_get_second_digit(l: &str) -> String {
     //     l, second_digit_idx, second_word_idx
     // );
 
-    let last_word = WORD_DIGITS_MAP
-        .get(second_word_idx.1)
-        .unwrap_or(&"0")
-        .to_string();
+    let last_word = format!("{:#}", second_word_idx.2 + 1);
     let last_digit = l.chars().nth(second_digit_idx).unwrap_or('0').to_string();
 
     if usize::MAX == second_word_idx.0 {
