@@ -1,3 +1,4 @@
+use std::cmp::max;
 #[cfg(test)]
 const TEST_INPUT: &str = r#"
 Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
@@ -16,12 +17,18 @@ fn main() {
             acc += cube.game_num;
             acc
         });
-    println!(
-        "{:?}",
-        puzzle
-    )
+    println!("Part I: {:?}", puzzle);
     // 2634 too high (condition was max >= cube_num)
     // 2078 too low (condition was max > cube_num)
+
+    println!(
+        "Part II: {:?}",
+        include_str!("day02.txt")
+            .split(|c| c == '\n')
+            .map(parse_minimum_game)
+            .map(MinCubesTracker::power)
+            .sum::<usize>()
+    )
 }
 
 #[derive(Default, Debug, Clone)]
@@ -54,7 +61,6 @@ fn parse_game(l: &str) -> CubeTracker {
     let max_red = 12;
     let max_green = 13;
     let max_blue = 14;
-
 
     l.chars().skip(5).fold(CubeTracker::new(), |mut acc, c| {
         // println!("{:?}---{:?}", c, acc);
@@ -116,16 +122,95 @@ fn parse_game(l: &str) -> CubeTracker {
                 }
                 acc
             }
-            _ => {
-                acc
-            }
+            _ => acc,
         };
     })
 }
 
+#[derive(Debug, Clone)]
+struct MinCubesTracker {
+    min_red: usize,
+    min_green: usize,
+    min_blue: usize,
+    cube_num: usize,
+    cube_color: String,
+    partial_parse: String,
+}
+
+impl MinCubesTracker {
+    fn new() -> MinCubesTracker {
+        MinCubesTracker {
+            min_red: 0,
+            min_green: 0,
+            min_blue: 0,
+            cube_num: 0,
+            cube_color: String::new(),
+            partial_parse: String::new(),
+        }
+    }
+
+    fn power(self) -> usize {
+        self.min_red * self.min_green * self.min_blue
+    }
+}
+
+fn parse_minimum_game(l: &str) -> MinCubesTracker {
+    l.chars()
+        .skip_while(|&c| c != ':')
+        .skip(1)
+        .fold(MinCubesTracker::new(), |mut acc, c| {
+            // println!("{:?}---{:?}", c, acc);
+
+            if !c.is_alphanumeric() {
+                return acc;
+            }
+
+            if c.is_ascii_digit() {
+                acc.partial_parse = acc.partial_parse.clone() + c.to_string().as_str();
+                return acc;
+            }
+
+            if acc.cube_num == 0 {
+                acc.cube_num = acc.partial_parse.parse::<usize>().unwrap();
+                acc.partial_parse = c.to_string();
+                return acc;
+            }
+
+            acc.partial_parse = acc.partial_parse.clone() + c.to_string().as_str();
+
+            return match acc.partial_parse.as_str() {
+                "red" | "green" | "blue" => {
+                    // At this point, I probably don't need to track the color anymore
+                    acc.cube_color = acc.partial_parse.clone();
+                    match acc.cube_color.as_str() {
+                        "red" => {
+                            acc.min_red = max(acc.min_red, acc.cube_num);
+                        }
+                        "blue" => {
+                            acc.min_blue = max(acc.min_blue, acc.cube_num);
+                        }
+                        "green" => {
+                            acc.min_green = max(acc.min_green, acc.cube_num);
+                        }
+                        _ => {
+                            panic!("YOOO??");
+                        }
+                    }
+
+                    acc.cube_num = 0;
+                    acc.cube_color = String::new();
+                    acc.partial_parse = String::new();
+
+                    acc
+                }
+                _ => acc,
+            };
+        })
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{CubeTracker, parse_game, TEST_INPUT};
+    use crate::{parse_game, parse_minimum_game, CubeTracker, MinCubesTracker, TEST_INPUT};
 
     #[test]
     fn test_part_a_input() {
@@ -152,5 +237,16 @@ mod tests {
                 acc += cube.game_num;
                 acc
             });
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_part_b() {
+        let result: usize = TEST_INPUT
+            .split(|c| c == '\n')
+            .map(parse_minimum_game)
+            .map(MinCubesTracker::power)
+            .sum();
+        assert_eq!(result, 2286);
     }
 }
