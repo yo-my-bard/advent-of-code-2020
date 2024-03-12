@@ -35,7 +35,7 @@ impl EngineReader {
         let pl = self.previous_line.clone().unwrap_or_default();
         let cl = self.current_line.clone().unwrap_or_default();
         if let Some(u) = &mut self.previous_line {
-            for mut i in u.line_numbers.iter_mut() {
+            for i in u.line_numbers.iter_mut() {
                 if ((cl.line_symbols.contains(&i.start_pos.unwrap()))
                     || (cl.line_symbols.contains(&i.end_pos.unwrap()))
                     || (pl.line_symbols.contains(&i.start_pos.unwrap()))
@@ -48,7 +48,7 @@ impl EngineReader {
         }
 
         if let Some(v) = &mut self.current_line {
-            for mut j in v.line_numbers.iter_mut() {
+            for j in v.line_numbers.iter_mut() {
                 if ((pl.line_symbols.contains(&j.start_pos.unwrap()))
                     || (pl.line_symbols.contains(&j.end_pos.unwrap()))
                     || (cl.line_symbols.contains(&j.start_pos.unwrap()))
@@ -89,9 +89,9 @@ fn read_schematics(s: &str) -> usize {
     for l in s.lines() {
         println!("{:?}", l);
         println!("{:?}", parse_line(l));
-        reader.push(parse_line(l));
+        reader.push(parse_line(l.trim()));
         reader.check_numbers();
-        // println!("{:?}", reader);
+        println!("{:?}", reader);
         println!("{:?}", reader.accumulated_numbers);
         println!("=================");
     }
@@ -99,7 +99,7 @@ fn read_schematics(s: &str) -> usize {
 }
 
 fn parse_line(s: &str) -> LineReader {
-    let line_reader: LineReader = s.char_indices().fold(LineReader::default(), |mut acc, cn_tuple| {
+    s.char_indices().fold(LineReader::default(), |mut acc, cn_tuple| {
         if cn_tuple.1 == '.' {
             if let Some(mut num) = acc.current_number.clone() {
                 num.parse_number();
@@ -127,24 +127,25 @@ fn parse_line(s: &str) -> LineReader {
 
             num.end_pos = Some(cn_tuple.0);
             num.chars.push(cn_tuple.1);
-            acc.current_number = Some(num);
+            acc.current_number = Some(num.clone());
+            if s.len() - 1 == cn_tuple.0 {
+                // last loop
+                num.parse_number();
+                acc.line_numbers.push(num);
+            }
         } else {
-            let mut new_number = Number {
+            let new_number = Number {
                 number: 0,
                 start_pos: Some(cn_tuple.0),
                 end_pos: Some(cn_tuple.0),
-                chars: Vec::new(),
+                chars: vec![cn_tuple.1],
                 found: false,
             };
-            new_number.chars.push(cn_tuple.1);
             acc.current_number = Some(new_number);
         }
 
-
         acc
-    });
-
-    line_reader
+    })
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -170,5 +171,11 @@ mod tests {
     #[test]
     fn testing() {
         println!("{:?}", read_schematics(TEST_STRING));
+    }
+
+    #[test]
+    fn testy() {
+        let number_at_edge = ".........699....*.........=............15*619.......................*......515....487........................808...............*.....611*121";
+        println!("{:?}", read_schematics(number_at_edge));
     }
 }
